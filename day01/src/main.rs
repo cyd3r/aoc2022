@@ -1,8 +1,10 @@
-use std::fs;
+use std::io::{self, Read};
 
 fn main() {
-    let contents = fs::read_to_string("input.txt").expect("Should read file");
-    let mut cals: Vec<i32> = contents
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+
+    let mut cals: Vec<i32> = input
         .split("\n\n")
         .map(|elf_group| {
             elf_group
@@ -20,6 +22,6 @@ fn main() {
     for i in 0..3 {
         top3_sum += cals[i];
     }
-    println!("Top: {}", cals[0]);
-    println!("Top3 Sum: {}", top3_sum);
+    println!("Part 1: {}", cals[0]);
+    println!("Part 2: {}", top3_sum);
 }
