@@ -128,7 +128,7 @@ fn astar_search(grid: &Grid, start_pos: Position, end_pos: Position) -> Option<u
     None
 }
 
-fn dijkstra_search(grid: &Grid, end_pos: Position, start_height: u32) -> Vec<u32> {
+fn dijkstra_search(grid: &Grid, end_pos: Position, start_height: u32) -> Option<u32> {
     // BinaryHeap works like a priority queue
     let mut to_visit: BinaryHeap<State> = BinaryHeap::new();
     let mut came_from: HashMap<Position, Position> = HashMap::new();
@@ -139,10 +139,9 @@ fn dijkstra_search(grid: &Grid, end_pos: Position, start_height: u32) -> Vec<u32
         pos: end_pos,
     });
     cost_so_far.insert(end_pos, 0);
-    let mut steps: Vec<u32> = Vec::new();
     while let Some(current) = to_visit.pop() {
         if grid.get_height(current.pos).unwrap() == start_height {
-            steps.push(count_steps(&came_from, end_pos, current.pos));
+            return Some(count_steps(&came_from, end_pos, current.pos));
         }
 
         // neighbours
@@ -172,7 +171,7 @@ fn dijkstra_search(grid: &Grid, end_pos: Position, start_height: u32) -> Vec<u32
             }
         }
     }
-    steps
+    None
 }
 
 fn main() {
@@ -206,12 +205,5 @@ fn main() {
         "Part 1: {}",
         astar_search(&grid, start_pos, end_pos).unwrap()
     );
-    println!(
-        "Part 2: {}",
-        dijkstra_search(&grid, end_pos, 0)
-            .iter()
-            .copied()
-            .min()
-            .unwrap()
-    );
+    println!("Part 2: {}", dijkstra_search(&grid, end_pos, 0).unwrap());
 }
