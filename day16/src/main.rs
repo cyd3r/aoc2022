@@ -2,7 +2,6 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::io::{self, Read};
 
-
 fn get_shortest(from: u32, tunnels: &HashMap<u32, Vec<u32>>) -> HashMap<u32, u32> {
     let mut to_visit: Vec<u32> = Vec::new();
     let mut came_from: HashMap<u32, u32> = HashMap::new();
@@ -25,6 +24,75 @@ fn get_shortest(from: u32, tunnels: &HashMap<u32, Vec<u32>>) -> HashMap<u32, u32
 
     cost_so_far.remove(&from);
     cost_so_far
+}
+
+fn search2(
+    current: (u32, u32),
+    minute: (u32, u32),
+    opened: &HashSet<u32>,
+    distances: &HashMap<(u32, u32), u32>,
+    flows: &HashMap<u32, u32>,
+) -> u32 {
+    // TODO: is .clone here performant?
+    let mut opened = opened.clone();
+    // let mut opened2:HashSet<u32>=HashSet::new();
+    // for op in opened {
+    //     opened2.insert(op.clone());
+    // }
+    // let mut opened=opened2;
+
+    opened.insert(current.0);
+    opened.insert(current.1);
+
+    if minute.0 < minute.1 {
+        if minute.0 >= 26 {
+            return 0;
+        }
+        // 0 was just opened
+        // only 0 moves
+        let mut best = 0;
+        for (valve, flow) in flows {
+            if *flow == 0 || opened.contains(valve) {
+                continue;
+            }
+            if let Some(dist) = distances.get(&(current.0, *valve)) {
+                let subgain = search2(
+                    (*valve, current.1),
+                    (minute.0 + dist + 1, minute.1),
+                    &opened,
+                    distances,
+                    flows,
+                );
+                best = best.max(subgain);
+            }
+        }
+
+        return best + flows[&current.0] * (26 - minute.0);
+    } else {
+        if minute.1 >= 26 {
+            return 0;
+        }
+        // 1 was just opened
+        // only 1 moves
+        let mut best = 0;
+        for (valve, flow) in flows {
+            if *flow == 0 || opened.contains(valve) {
+                continue;
+            }
+            if let Some(dist) = distances.get(&(current.1, *valve)) {
+                let subgain = search2(
+                    (current.0, *valve),
+                    (minute.0, minute.1 + dist + 1),
+                    &opened,
+                    distances,
+                    flows,
+                );
+                best = best.max(subgain);
+            }
+        }
+
+        return best + flows[&current.1] * (26 - minute.1);
+    }
 }
 
 fn search(
@@ -84,6 +152,9 @@ fn part1(flows: &HashMap<u32, u32>, tunnels: &HashMap<u32, Vec<u32>>, start: u32
 
     let best = search(start, 0, &HashSet::new(), &costs, flows);
     println!("Part 1: {}", best);
+
+    let best = search2((start, start), (0, 0), &HashSet::new(), &costs, flows);
+    println!("Part 2: {}", best);
 }
 
 fn main() {
